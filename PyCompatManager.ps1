@@ -228,8 +228,8 @@ function Install-Dependencies {
                     $dependencyName = "$dependencyName$versionConstraint"
                 }
 
-                Write-Output $dependencyName
-                Break
+                # Write-Output $dependencyName
+                # Break
 
                 # Recursively install dependencies
                 Install-Dependencies -PackageName $dependencyName
@@ -238,7 +238,7 @@ function Install-Dependencies {
         }
     }
 
-    Exit
+    # Exit
 
     # Here you would call your function or logic to install the package
     # Attempt to install the package using pip
@@ -256,8 +256,8 @@ function Install-Dependencies {
 
 $packageName = $args[0]
 
-Install-Dependencies -PackageName $PackageName
-Exit
+# Install-Dependencies -PackageName $PackageName
+# Exit
 
 # Assuming Get-Latest function is modified to return download URL
 $downloadUrl = Get-Latest -requiredVersion $targetPythonVersion -PackageName $packageName
