@@ -99,7 +99,7 @@ function Get-Latest {
         foreach ($package in $release.Value) {
             if ($null -ne $package.requires_python -and 
                 (Test-VersionCompatibility -requiredVersion $requiredVersion -requiresPython $package.requires_python)) {
-                Write-Output $package
+                # Write-Output $package
                 if ($package.filename -match '\.(zip|tar\.gz)$') {
                     return $package.url  # Return the URL string directly
                 }
