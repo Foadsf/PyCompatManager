@@ -14,7 +14,7 @@ PyCompatManager is a PowerShell script designed to manage package installations 
 To use PyCompatManager, execute the script in PowerShell, passing the package name as an argument:
 
 ```powershell
-.\PyCompatManager.ps1 -PackageName <your-package-name>
+.\PyCompatManager.ps1 <your-package-name>
 ```
 
 Ensure PowerShell has the necessary permissions to execute scripts and network access to communicate with the PyPI API.
