@@ -259,6 +259,7 @@ $packageName = $args[0]
 # Install-Dependencies -PackageName $PackageName
 # Exit
 
+
 # Assuming Get-Latest function is modified to return download URL
 $downloadUrl = Get-Latest -requiredVersion $targetPythonVersion -PackageName $packageName
 Write-Output $downloadUrl
@@ -266,7 +267,103 @@ Write-Output $downloadUrl
 
 
 # Specify the temporary directory for downloading and unpacking
-$tempDir = "C:\Temp\DownloadedPackages"
+$targetTempFolder = $targetPythonVersion.ToString().Replace('.', '_')
+$tempDir = "C:\Temp\DownloadedPackagesPython$targetTempFolder"
+
+function Check-VCCompilerInstallation {
+    # Define the product code for Microsoft Visual C++ Compiler Package for Python 2.7
+    $productCode = "{692514A8-5484-45FC-B0AE-BE2DF7A75891}"
+
+    # Check in both 32-bit and 64-bit registry locations
+    $paths = @(
+        "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+        "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+    )
+
+    # Initialize the installed flag to false
+    $installed = $false
+
+    # Iterate through the registry paths to check if the product code exists
+    foreach ($path in $paths) {
+        if (Test-Path "$path\$productCode") {
+            Write-Host "Microsoft Visual C++ Compiler Package for Python 2.7 is already installed."
+            $installed = $true
+            break
+        }
+    }
+
+    # Return true if installed, false otherwise
+    return $installed
+}
+
+
+if ($packageName -eq 'numpy' -and $env:OS -eq 'Windows_NT' -and $targetPythonVersion -le [version]'2.7' -and !(Check-VCCompilerInstallation)) {
+    # Define the download URL and destination path
+    $url_VCForPython27 = "https://web.archive.org/web/20190720195601/https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi"
+    $msiPath = "$tempDir\VCForPython27.msi"
+
+    # Create the temp directory if it doesn't exist
+    if (-not (Test-Path $tempDir)) {
+        New-Item -Path $tempDir -ItemType Directory
+    }
+
+
+    # Download the file
+    # Invoke-WebRequest -Uri $url_VCForPython27 -OutFile $msiPath
+    # Start-BitsTransfer -Source $url_VCForPython27 -Destination $msiPath
+    # Check if the file already exists before downloading
+    if (-Not (Test-Path $msiPath)) {
+        Start-BitsTransfer -Source $url_VCForPython27 -Destination $msiPath
+    }
+    else {
+        Write-Host "The file already exists at the specified location: $msiPath"
+    }
+    # Exit
+
+    # Check if the script is running as an administrator
+    if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        # Prompt the user to run the script as an administrator
+        Write-Host "To install numpy, this script requires administrator rights."
+        Write-Host "Please run the script as an administrator."
+        exit
+    }
+
+    # Install the MSI package
+    Start-Process "msiexec.exe" -ArgumentList "/i `"$msiPath`" ALLUSERS=1 /qn /norestart /L*V `"$tempDir\VCForPython27.log`"" -Wait
+    # Start-Process "msiexec.exe" -ArgumentList "/i `"C:\temp\DownloadedPackagesPython2_7\VCForPython27.msi`" ALLUSERS=1 /qn /norestart /L*V `"C:\temp\DownloadedPackagesPython2_7\VCForPython27.log`"" -Wait
+
+    # Define the identifying number for the software to check
+    # $productCode = "{692514A8-5484-45FC-B0AE-BE2DF7A75891}"
+
+    # Check if the product is already installed
+    # $installed = Get-WmiObject Win32_Product | Where-Object { $_.IdentifyingNumber -eq $productCode }
+
+    # Check in both 32-bit and 64-bit registry locations
+    # $paths = @(
+    #     "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+    #     "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+    # )
+
+    # $installed = $false
+    # foreach ($path in $paths) {
+    #     if (Test-Path "$path\$productCode") {
+    #         $installed = $true
+    #         break
+    #     }
+    # }
+
+    # if ($installed) {
+    if (Check-VCCompilerInstallation) {
+        Write-Host "Microsoft Visual C++ Compiler Package for Python 2.7 is successfully installed."
+    }
+    else {
+        Write-Error "Microsoft Visual C++ Compiler Package for Python 2.7 is not installed."
+        exit 1
+    }
+
+
+}
+
 
 if (-not [string]::IsNullOrWhiteSpace($downloadUrl)) {
     Fetch-Package -url $downloadUrl -tempDir $tempDir
