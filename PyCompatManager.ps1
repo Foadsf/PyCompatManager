@@ -199,9 +199,17 @@ function Fetch-Package {
     # $cmd = "$pythonPath -c `"import os; os.chdir(r'$setupDir'); exec(open('setup.py').read())`" install"
     $cmd = "$pythonPath -c `"import os; __file__ = r'$setupDir\setup.py'; os.chdir(os.path.dirname(__file__)); exec(open(__file__).read())`" install"
 
-
+    # Exit
     # Execute the command
+    # Invoke-Expression $cmd
+    # Invoke-Expression $cmd | Out-File -FilePath "$tempDir\$expectedDirName.log"
+    # Invoke-Expression $cmd *> "$tempDir\$expectedDirName.log"
+    $ErrorActionPreference = "SilentlyContinue"
+    Stop-Transcript | Out-Null
+    $ErrorActionPreference = "Continue"
+    Start-Transcript -Path "$tempDir\$expectedDirName.log" 
     Invoke-Expression $cmd
+    Stop-Transcript
 
 
 }
